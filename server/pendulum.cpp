@@ -34,9 +34,10 @@ std::array<double, 4> Pendulum::simulate(double u, std::array<double, 4> x0, dou
 }
 
 double Pendulum::rewardFunc(std::array<double, 4> x, double u) {
+  u = u * 2 * maxu - maxu;
   double reward = 0;
-  constexpr std::array<double, 4> rewardWeights = { 1, 0.005, 1, 0.005 };
-  constexpr double Rrew = 0;
+  constexpr std::array<double, 4> rewardWeights = { 0.85, 0.000, 1, 0.005 };
+  constexpr double Rrew = 0.06;
   double nonnorm_max = Rrew * maxu * maxu;
 
   x[0] = Pendulum::normalizeAngle(x[0]);

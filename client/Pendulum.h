@@ -1,9 +1,15 @@
 ﻿#pragma once
 #include <array>
+#include <chrono>
+#include <iostream>
+
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+#ifndef M
+#define M 3
+#endif // !M
 #define g 9.80665		// gravity
 #define Beq 0.004      // Equivalent viscous damM_PIng coefficient
 #define Jeq 0.0035842  // Moment of inertia of the arm and pendulum about the axis of θ
@@ -19,11 +25,8 @@
 #define NUm 0.69       // motor efficiency
 #define maxf(a,b) (a>b?a:b)
 #define minf(a,b) (a<b?a:b)
-#define maxu 9
-#define odesteps 10
-#ifndef M
-#define M 3
-#endif // !M
+
+
 
 class StaticPendulum {
 private:
@@ -33,7 +36,7 @@ private:
   static constexpr double dP = msss * g * Lp;
   static constexpr double eP = Beq + (NUm * NUg * Kt * Km * Kg * Kg) / Rm;
   static constexpr double fP = (NUm * NUg * Kt * Kg) / Rm;
-  static constexpr double maxx[4] = { M_PI,100, M_PI, 100 };
+  static constexpr double maxx[4] = { M_PI, 100, M_PI, 100 };
 
 public:
   static std::array<double, 4> simulate(double, std::array<double, 4>, double);
@@ -49,18 +52,11 @@ public:
   virtual void applyInput(double) = 0;
 };
 
-class SimPendulum : PendInterface {
+class SimPendulum : public PendInterface {
 private:
-  static constexpr double aP = Jeq + msss * r * r + NUg * Kg * Kg * Jm;
-  static constexpr double bP = msss * Lp * r;
-  static constexpr double cP = (4 * msss * Lp * Lp) / 3;
-  static constexpr double dP = msss * g * Lp;
-  static constexpr double eP = Beq + (NUm * NUg * Kt * Km * Kg * Kg) / Rm;
-  static constexpr double fP = (NUm * NUg * Kt * Kg) / Rm;
-  static constexpr double maxx[4] = { M_PI,100, M_PI, 100 };
-
   std::array<double, 4> states;
   double ts;
+  double uk;
 public:
 
   SimPendulum(std::array<double, 4> initialStates, double ts) {
@@ -69,10 +65,31 @@ public:
   }
 
   void applyInput(double u) {
-    this->states = StaticPendulum::simulate(u, this->states, this->ts);
+    this->uk = u;
   }
 
   std::array<double, 4> readStates() {
+    static auto lastRead = std::chrono::high_resolution_clock::now();
+    auto ts = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - lastRead).count() / 1000.0;
+    this->states = StaticPendulum::simulate(this->uk, this->states, ts);
+    lastRead = std::chrono::high_resolution_clock::now();
+    return this->states; 
+  }
+  std::array<double, 4> simStates() {
+    this->states = StaticPendulum::simulate(this->uk, this->states, ts);
     return this->states;
-  };
+  }
+
+  void setStates(std::array<double, 4> x) {
+      this->states = x;
+  }
+};
+
+class RealPend : public PendInterface {
+    std::array<double, 4> states;
+    double ts;
+public:
+    RealPend(double);
+    void applyInput(double);
+    std::array<double, 4> readStates();
 };

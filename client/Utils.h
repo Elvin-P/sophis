@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <boost/algorithm/string.hpp>
+#include "Pendulum.h"
 
 std::string statesToString(std::array<double, 4> states) {
   std::string statesString = "";

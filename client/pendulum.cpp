@@ -1,6 +1,7 @@
 #include <array>
 #include <cmath>
 #include "Pendulum.h"
+#include "client_comm.h"
 
 #define maxf(a,b) (a>b?a:b)
 #define minf(a,b) (a<b?a:b)
@@ -34,9 +35,10 @@ std::array<double, 4> StaticPendulum::simulate(double u, std::array<double, 4> x
 }
 
 double StaticPendulum::rewardFunc(std::array<double, 4> x, double u) {
+    u = u * 2 * maxu - maxu;
   double reward = 0;
-  constexpr std::array<double, 4> rewardWeights = { 1, 0.005, 1, 0.005 };
-  constexpr double Rrew = 0;
+  constexpr std::array<double, 4> rewardWeights = { 1, 0.025, 1, 0.025 };
+  constexpr double Rrew = 0.00;
   double nonnorm_max = Rrew * maxu * maxu;
 
   x[0] = StaticPendulum::normalizeAngle(x[0]);
@@ -77,4 +79,19 @@ double StaticPendulum::getNormalInput(double uc_left, double uc_right, double ud
 double StaticPendulum::normalizeAngle(double a) {
   const double mPi = (a >= 0) ? M_PI : -M_PI;
   return fmod(a + mPi, 2.0 * M_PI) - mPi;
+}
+
+RealPend::RealPend(double ts) {
+    this->states = this->readStates();
+    this->ts = ts;
+}
+
+void RealPend::applyInput(double u) {
+    double voltageCmd = -(u * 18 - 9);
+    write_pend(voltageCmd);
+    return;
+}
+std::array<double, 4> RealPend::readStates() {
+    this->states = read_pend();
+    return this->states;
 }

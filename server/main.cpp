@@ -108,7 +108,7 @@ int main() {
         auto x0 = std::get<0>(readResult);
 
         auto start = std::chrono::high_resolution_clock::now();
-        auto u = parallelSophis(x0, budget, 0.85, ts, numThreads);
+        auto u = parallelSophis(x0, budget, 0.9, ts, numThreads);
         //double u = sophis(x0, 20000, 0.85, 0.05)[0];
         auto stop = std::chrono::high_resolution_clock::now();
         duration += std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
