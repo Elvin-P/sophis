@@ -14,51 +14,45 @@
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/algorithm/string.hpp>
+#include "Settings.h"
 #include "Pendulum.h"
 #include "Utils.h"
 #include "quanser_board.h"
 #include "io.h"
 
+
 using boost::asio::ip::tcp;
 
-struct Settings {
-    int budget;
-    int numThreads;
-    int samplesPerStep;
-};
 
 int runExp(boost::asio::io_context& io, tcp::socket& socket, PendInterface& pend, const Settings& settings) {
     boost::system::error_code error;
-    const int samplesPerStep = settings.samplesPerStep;
     boost::asio::io_context::strand strand(io);
     std::ofstream output("C:\\Users\\quancer\\Desktop\\Elvin\\text.txt");
     std::ofstream simout("C:\\Users\\quancer\\Desktop\\Elvin\\textSim.txt");
     std::ofstream inputs("C:\\Users\\quancer\\Desktop\\Elvin\\inputs.txt");
-    constexpr double ts = 0.05;
-    std::chrono::milliseconds duration = std::chrono::milliseconds::zero();
+    const int samplesPerStep = settings.samplesPerStep;
+    double ts = settings.ts;
     auto start = std::chrono::high_resolution_clock::now();
+    std::chrono::milliseconds duration = std::chrono::milliseconds::zero();
     boost::asio::steady_timer timer(io);
     boost::asio::steady_timer readTimer(io);
-
     std::mutex readMutex;
-
-
     std::vector<double> u(samplesPerStep);
+    std::condition_variable readFlag;
+
     for (int i = 0; i < samplesPerStep; i++) {
         u[i] = 0.5;
     }
+
     auto x0 = pend.readStates();
     auto predX = x0;
     auto simPend = new SimPendulum(x0, ts);
     auto simPend2 = new SimPendulum(x0, ts);
     auto simX = x0;
-
-    std::condition_variable readFlag;
     auto stop = false;
 
-    readTimer.expires_after(std::chrono::milliseconds(0));
-
     auto read = std::async(std::launch::async, [&]() {
+        readTimer.expires_after(std::chrono::milliseconds(0));
         while (!stop) {
             readTimer.wait();
             {
@@ -66,13 +60,14 @@ int runExp(boost::asio::io_context& io, tcp::socket& socket, PendInterface& pend
                 x0 = pend.readStates();
             }
             readFlag.notify_all();
-            readTimer.expires_at(readTimer.expires_at() + std::chrono::milliseconds(10));
+            readTimer.expires_at(readTimer.expires_at() + std::chrono::milliseconds(5));
         }
         });
     
     start = std::chrono::high_resolution_clock::now();
     timer.expires_after(std::chrono::milliseconds(0));
-    for (int i = 0; i < 150; i += samplesPerStep) {
+
+    for (int i = 0; i < 500; i += samplesPerStep) {
         {
             std::unique_lock<std::mutex> lock(readMutex);
             readFlag.wait(lock);
@@ -80,7 +75,7 @@ int runExp(boost::asio::io_context& io, tcp::socket& socket, PendInterface& pend
             lock.unlock();
         }
         // Predict X_hat_k+samplesPerStep on separate thread
-        auto b = std::async(std::launch::async, [&predX, i, simPend, simPend2, &simX, &u, samplesPerStep, ts, &socket]() {
+        auto b = std::async(std::launch::async, [&,  samplesPerStep]() {
             for (int j = 0; j < samplesPerStep; j++) {
                 double input = u[j];
                 simPend->applyInput(input);
@@ -122,7 +117,7 @@ int runExp(boost::asio::io_context& io, tcp::socket& socket, PendInterface& pend
         simout << simX[0] << " " << simX[1] << " " << simX[2] << " " << simX[3] << std::endl;
         {
             std::lock_guard<std::mutex> lock(readMutex);
-            std::cout << i * 50 << " " << statesToString(simX) << " - " << statesToString(x0) << std::endl;
+            std::cout << i * (int)(ts*1000) << " " << statesToString(simX) << " - " << statesToString(x0) << std::endl;
         }
         if (error == boost::asio::error::eof)
             break; // Connection closed cleanly by peer.
@@ -131,7 +126,6 @@ int runExp(boost::asio::io_context& io, tcp::socket& socket, PendInterface& pend
     }
     stop = true;
     read.get();
-    std::cout << "Average: " << duration.count() / 200 * samplesPerStep << " millisecondss\n";
     output.close();
     simout.close();
     inputs.close();
@@ -141,35 +135,22 @@ int runExp(boost::asio::io_context& io, tcp::socket& socket, PendInterface& pend
 }
 
 int main(int argc, const char* argv[]) {
-    if (argc < 4)
-    {
-        std::cerr << "Usage: client <host> <budget> <cores> <?samples per step>" << std::endl;
-        return 1;
-    }
-    auto a = [argc, &argv]() {
-        if (argc < 5) {
-            return 3;
-        }
-        return std::stoi(std::string(argv[4]));
-        };
-    const short samplesPerStep = a();
-
-    const Settings settings = { std::stoi(argv[2]), std::stoi(argv[3]), samplesPerStep };
+    Settings settings = parseSettings(argc, argv);
     boost::asio::io_context io;
     // Connect to server
     tcp::resolver resolver(io);
     tcp::socket socket(io);
-    tcp::resolver::results_type endpoints = resolver.resolve(argv[1], "daytime");
+    tcp::resolver::results_type endpoints = resolver.resolve(settings.ip, "daytime");
     boost::asio::connect(socket, endpoints);
     boost::system::error_code error;
     boost::asio::write(socket, boost::asio::buffer(std::to_string(settings.budget) + " " + std::to_string(settings.numThreads)), error);
 
-  if (argc == 6 && std::string(argv[5]) == "sim") {
-    SimPendulum pend({ 0.0, 0.0, -M_PI, 0.0 }, 0.05);
+  if (settings.mode == "sim") {
+    SimPendulum pend({ 0.0, 0.0, -M_PI, 0.0 }, settings.ts);
     return runExp(io, socket, pend, settings);
   }
   init_quanser_board();
-  RealPend pend(0.04);
+  RealPend pend;
   runExp(io, socket, pend, settings);
   clean_quanser_board();
   return 0;

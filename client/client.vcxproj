@@ -129,7 +129,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>hil.lib;quanser_runtime.lib;quanser_common.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(HIL_DIR)lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\quancer\Desktop\Elvin\sophis\includes\boost_1_84_0\libs;$(HIL_DIR)lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClInclude Include="client_comm.h" />
     <ClInclude Include="io.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="Pendulum.h" />
     <ClInclude Include="quanser_board.h" />
     <ClInclude Include="quanser_status.h" />

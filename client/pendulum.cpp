@@ -81,9 +81,8 @@ double StaticPendulum::normalizeAngle(double a) {
   return fmod(a + mPi, 2.0 * M_PI) - mPi;
 }
 
-RealPend::RealPend(double ts) {
+RealPend::RealPend() {
     this->states = this->readStates();
-    this->ts = ts;
 }
 
 void RealPend::applyInput(double u) {

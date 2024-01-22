@@ -87,9 +87,8 @@ public:
 
 class RealPend : public PendInterface {
     std::array<double, 4> states;
-    double ts;
 public:
-    RealPend(double);
+    RealPend();
     void applyInput(double);
     std::array<double, 4> readStates();
 };
