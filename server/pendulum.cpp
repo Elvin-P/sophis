@@ -37,7 +37,7 @@ double Pendulum::rewardFunc(std::array<double, 4> x, double u) {
   u = u * 2 * maxu - maxu;
   double reward = 0;
   constexpr std::array<double, 4> rewardWeights = { 1, 0, 1, 0.005 };
-  constexpr double Rrew = 0.03;
+  constexpr double Rrew = 0.06;
   double nonnorm_max = Rrew * maxu * maxu;
 
   x[0] = Pendulum::normalizeAngle(x[0]);

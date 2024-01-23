@@ -52,37 +52,54 @@ public:
   virtual void applyInput(double) = 0;
 };
 
-class SimPendulum : public PendInterface {
+class SimPend : public PendInterface {
 private:
   std::array<double, 4> states;
   double ts;
-  double uk;
 public:
 
-  SimPendulum(std::array<double, 4> initialStates, double ts) {
+  SimPend(std::array<double, 4> initialStates, double ts) {
     this->states = initialStates;
     this->ts = ts;
   }
 
   void applyInput(double u) {
-    this->uk = u;
+      this->states = StaticPendulum::simulate(u, this->states, this->ts);
   }
 
   std::array<double, 4> readStates() {
-    static auto lastRead = std::chrono::high_resolution_clock::now();
-    auto ts = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - lastRead).count() / 1000.0;
-    this->states = StaticPendulum::simulate(this->uk, this->states, ts);
-    lastRead = std::chrono::high_resolution_clock::now();
-    return this->states; 
-  }
-  std::array<double, 4> simStates() {
-    this->states = StaticPendulum::simulate(this->uk, this->states, ts);
-    return this->states;
+        return this->states; 
   }
 
   void setStates(std::array<double, 4> x) {
       this->states = x;
   }
+};
+
+class SimPendRT : public PendInterface {
+private:
+    std::array<double, 4> states;
+    double uk;
+public:
+    SimPendRT(std::array<double, 4> initialStates) {
+        this->states = initialStates;
+    }
+
+    void applyInput(double u) {
+        this->uk = u;
+    }
+
+    std::array<double, 4> readStates() {
+        static auto lastRead = std::chrono::high_resolution_clock::now();
+        auto ts = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - lastRead).count() / 1000.0;
+        this->states = StaticPendulum::simulate(this->uk, this->states, ts);
+        lastRead = std::chrono::high_resolution_clock::now();
+        return this->states;
+    }
+
+    void setStates(std::array<double, 4> x) {
+        this->states = x;
+    }
 };
 
 class RealPend : public PendInterface {

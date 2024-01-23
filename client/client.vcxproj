@@ -109,7 +109,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(HIL_DIR)lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\quancer\Desktop\Elvin\sophis\includes\boost_1_84_0\boost\bin.v2\libs\program_options\build\msvc-14.1\debug\link-static\threading-multi;$(HIL_DIR)lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>hil.lib;quanser_runtime.lib;quanser_common.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -128,8 +128,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>hil.lib;quanser_runtime.lib;quanser_common.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\quancer\Desktop\Elvin\sophis\includes\boost_1_84_0\libs;$(HIL_DIR)lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hil.lib;quanser_runtime.lib;quanser_common.lib;legacy_stdio_definitions.lib;libboost_program_options-vc141-mt-x64-1_84.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\quancer\Desktop\Elvin\sophis\includes\boost_1_84_0\boost\bin.v2\libs\program_options\build\msvc-14.1\release\link-static\threading-multi;C:\Users\quancer\Desktop\Elvin\sophis\includes\boost_1_84_0\boost\bin.v2\libs\program_options\build\msvc-14.1\release\link-static\runtime-link-static\threading-multi;C:\Users\quancer\Desktop\Elvin\sophis\includes\boost_1_84_0\boost\bin.v2\libs\program_options\build\msvc-14.1\release\threading-multi;$(HIL_DIR)lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

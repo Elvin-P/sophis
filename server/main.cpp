@@ -4,15 +4,16 @@
 #define M_SPLIT 3
 #define DISC_ACT_NO 0
 
-#include <boost/asio.hpp>
-#include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <iostream>
 #include <string>
 #include <ctime>
 #include <tuple>
 #include <chrono>
+#include <array>
 #include <vector>
+#include <boost/asio.hpp>
+#include <boost/algorithm/string.hpp>
 #include "Pendulum.h"
 #include "Sophis.h"
 
@@ -38,7 +39,7 @@ std::array<double, 4> parseStates(std::string statesString) {
 std::tuple<std::array<double, 4>, size_t> readStates(tcp::socket& socket) {
   std::array<char, 512> buff;
   boost::system::error_code ignored_error;
-  std::size_t n = socket.read_some(boost::asio::buffer(buff), ignored_error);
+  size_t n = socket.read_some(boost::asio::buffer(buff), ignored_error);
 
   std::string states(buff.data(), n);
 
@@ -50,15 +51,15 @@ std::tuple<std::array<double, 4>, size_t> readStates(tcp::socket& socket) {
   return { {0.0, 0.0, 0.0, 0.0 }, n };
 }
 
-std::tuple<int, int> readSettings(tcp::socket& socket) {
+std::tuple<int, int, double, std::array<double, 5>> readSettings(tcp::socket& socket) {
   std::array<char, 512> buff;
   boost::system::error_code ignored_error;
-  std::size_t n = socket.read_some(boost::asio::buffer(buff), ignored_error);
+  size_t n = socket.read_some(boost::asio::buffer(buff), ignored_error);
 
   std::string settings(buff.data(), n);
 
   if (!n) {
-    return { 20000, 32 };
+      return { 20000, 32, 0.05, { 1, 0, 1, 0.05, 0.7 } };
   }
   std::stringstream ss(settings);
   std::string num;
@@ -68,7 +69,19 @@ std::tuple<int, int> readSettings(tcp::socket& socket) {
   ss >> num;
   int threads = std::stoi(num);
 
-  return { budget, threads };
+  ss >> num;
+  double ts = std::stod(num);
+
+  std::array<double, 5> weights;
+
+  for (int i = 0; i < 5; i++) {
+
+      ss >> num;
+      weights[i] = std::stod(num);
+  }
+
+
+  return { budget, threads, ts, weights };
 }
 
 std::string inputsToString(std::vector<double> u) {
@@ -93,7 +106,9 @@ int main() {
       auto settings = readSettings(socket);
       int budget = std::get<0>(settings);
       int numThreads = std::get<1>(settings);
-      double ts = 0.035;
+      std::cout << numThreads << std::endl;
+      double ts = std::get<2>(settings);
+      std::array<double, 5> weights = std::get<3>(settings);
 
 
       std::chrono::milliseconds duration = std::chrono::milliseconds::zero();
@@ -108,7 +123,7 @@ int main() {
         auto x0 = std::get<0>(readResult);
 
         auto start = std::chrono::high_resolution_clock::now();
-        auto u = parallelSophis(x0, budget, 0.85, ts, numThreads);
+        auto u = parallelSophis(x0, weights, budget, 0.85, ts, numThreads);
         //double u = sophis(x0, 20000, 0.85, 0.05)[0];
         auto stop = std::chrono::high_resolution_clock::now();
         duration += std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);

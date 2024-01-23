@@ -37,8 +37,8 @@ std::array<double, 4> StaticPendulum::simulate(double u, std::array<double, 4> x
 double StaticPendulum::rewardFunc(std::array<double, 4> x, double u) {
     u = u * 2 * maxu - maxu;
   double reward = 0;
-  constexpr std::array<double, 4> rewardWeights = { 1, 0.025, 1, 0.025 };
-  constexpr double Rrew = 0.00;
+  constexpr std::array<double, 4> rewardWeights = { 1, 0.0, 1, 0.005 };
+  constexpr double Rrew = 0.08;
   double nonnorm_max = Rrew * maxu * maxu;
 
   x[0] = StaticPendulum::normalizeAngle(x[0]);

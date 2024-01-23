@@ -55,7 +55,7 @@ std::vector<double> sophis(std::array<double, 4> x0, int budget = 10000, double 
   return actions;
 }
 
-std::vector<double> parallelSophis(std::array<double, 4> x0, int budget = 10000, double discount = 0.9, double ts = 0.05, short numThreads = 3) {
+std::vector<double> parallelSophis(std::array<double, 4> x0, std::array<double, 5> weights, int budget = 10000, double discount = 0.9, double ts = 0.05, short numThreads = 3) {
   const int maxDepth = (int)pow(budget, 0.4);
   static Tree* tree = new Tree(x0, maxDepth, budget);
   tree->clear(x0);

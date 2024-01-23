@@ -17,7 +17,6 @@ std::array <double, 4> read_pend() {
 	static std::array<double, 4> previousStates = { 0, 0, -M_PI, 0 };
 	static auto lastRead = std::chrono::high_resolution_clock::now();
 	auto ts = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - lastRead).count() / 1000.0 / 1000.0 / 1000.0;
-	std::cout << "TS: " << ts << std::endl;
 	int status = 0;
 	t_error quanser_status = 0;
 	t_int32 encoder_buffer[NR_CHANNEL_ENCODERS];

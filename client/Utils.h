@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <boost/algorithm/string.hpp>
+#include "Settings.h"
 #include "Pendulum.h"
 
 std::string statesToString(std::array<double, 4> states) {
@@ -16,8 +17,12 @@ std::string statesToString(std::array<double, 4> states) {
   return statesString;
 }
 
-std::string settingsToString(int budget, int numThreads) {
-  return std::to_string(budget) + " " + std::to_string(numThreads);
+std::string settingsToString(Settings &settings) {
+    return std::to_string(settings.budget) + " " 
+                        + std::to_string(settings.numThreads) + " " 
+                        + std::to_string(settings.ts) + " " 
+                        + statesToString({ settings.weights[0], settings.weights[1], settings.weights[2], settings.weights[3] }) + " " 
+                        + std::to_string(settings.weights[4]);
 }
 
 std::vector<double> parseInputs(std::string uString) {
